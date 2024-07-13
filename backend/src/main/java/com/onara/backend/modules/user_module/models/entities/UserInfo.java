@@ -23,5 +23,6 @@ public class UserInfo {
     private String password;
     @ElementCollection(fetch = FetchType.EAGER)
     private List<Role> roles;
+    private boolean isActive;
 
 }

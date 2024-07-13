@@ -2,8 +2,10 @@ package com.onara.backend.modules.user_module.services;
 
 
 import com.onara.backend.config.exceptions.AppException;
+import com.onara.backend.models.AppResponse;
+import com.onara.backend.models.MessageResponse;
 import com.onara.backend.modules.user_module.models.dto.AuthResponse;
-import com.onara.backend.modules.user_module.models.dto.RegisterRequest;
+import com.onara.backend.modules.user_module.models.dto.UserInfoDTO;
 import com.onara.backend.modules.user_module.models.entities.Role;
 import com.onara.backend.modules.user_module.models.entities.UserInfo;
 import com.onara.backend.modules.user_module.repositories.UserRepository;
@@ -46,7 +48,7 @@ public class UserServices implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority(role.getAuthority())).collect(Collectors.toList()));
     }
 
-    public AuthResponse registerUser(RegisterRequest newUser) throws AppException {
+    public AuthResponse registerUser(UserInfoDTO newUser) throws AppException {
 
         if (userRepository.findByUsername(newUser.getUsername()) != null) {
             throw new AppException("User with given username already exists", HttpStatus.BAD_REQUEST);
@@ -62,6 +64,7 @@ public class UserServices implements UserDetailsService {
         user.setUsername(newUser.getUsername());
         user.setPassword(encodedPassword);
         user.setRoles(roles);
+        user.setActive(true);
 
         userRepository.save(user);
 
@@ -71,4 +74,33 @@ public class UserServices implements UserDetailsService {
         return new AuthResponse(token);
     }
 
+    public UserInfo getUserInfo(String token) {
+        String jwt = token.substring(7);
+        String username = jwtUtil.extractUsername(jwt);
+        UserInfo userInfo = userRepository.findByUsername(username);
+        if(userInfo == null) {
+            throw new AppException("User with given username does not exist in our database", HttpStatus.NOT_FOUND);
+        }
+        return userInfo;
+    }
+
+
+    public AppResponse disableAccount(String token) {
+        UserInfo userInfo = getUserInfo(token);
+        userInfo.setActive(false);
+        userRepository.save(userInfo);
+        return new AppResponse(new MessageResponse("User ID has been deactivated"),true);
+    }
+
+    public UserInfoDTO updateUser(String token, UserInfoDTO updatedUserDTO) {
+        UserInfo userInfo = getUserInfo(token);
+        if(!userInfo.isActive()) {
+            throw new AppException("User ID is deactivated. You cannot edit its information", HttpStatus.UNAUTHORIZED);
+        }
+        userInfo.setName(updatedUserDTO.getName());
+        userInfo.setUsername(updatedUserDTO.getUsername());
+
+        userRepository.save(userInfo);
+        return new UserInfoDTO(userInfo);
+    }
 }
