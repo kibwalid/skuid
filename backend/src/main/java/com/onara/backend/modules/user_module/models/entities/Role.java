@@ -1,4 +1,4 @@
-package com.onara.backend.modules.user_module.models;
+package com.onara.backend.modules.user_module.models.entities;
 
 import org.springframework.security.core.GrantedAuthority;
 

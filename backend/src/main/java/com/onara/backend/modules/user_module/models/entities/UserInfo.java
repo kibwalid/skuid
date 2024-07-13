@@ -1,9 +1,11 @@
-package com.onara.backend.modules.user_module.models;
+package com.onara.backend.modules.user_module.models.entities;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 
 @Data
@@ -17,8 +19,9 @@ public class UserInfo {
     private int id;
     private String name;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private UserLogin loginInfo;
+    private String username;
+    private String password;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<Role> roles;
 
 }
