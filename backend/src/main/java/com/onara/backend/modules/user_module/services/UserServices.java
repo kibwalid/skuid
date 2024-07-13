@@ -46,6 +46,29 @@ public class UserServices implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority(role.getAuthority())).collect(Collectors.toList()));
     }
 
+    public AuthResponse registerUser(RegisterRequest newUser) throws AppException {
 
+        if (userRepository.findByUsername(newUser.getUsername()) != null) {
+            throw new AppException("User with given username already exists", HttpStatus.BAD_REQUEST);
+        }
+
+        String encodedPassword = passwordEncoder.encode(newUser.getPassword());
+        List<Role> roles = newUser.getRoles().stream()
+                .map(role -> Role.valueOf(role.toUpperCase()))
+                .toList();
+
+        UserInfo user = new UserInfo();
+        user.setName(newUser.getName());
+        user.setUsername(newUser.getUsername());
+        user.setPassword(encodedPassword);
+        user.setRoles(roles);
+
+        userRepository.save(user);
+
+        String token = jwtUtil.generateToken(new User(
+                user.getUsername(), user.getPassword(), user.getRoles()));
+
+        return new AuthResponse(token);
+    }
 
 }

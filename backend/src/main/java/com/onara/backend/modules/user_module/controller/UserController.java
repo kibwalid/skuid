@@ -37,7 +37,10 @@ public class UserController {
         return new AuthResponse(jwt);
     }
 
-
+    @PostMapping("/register")
+    public AuthResponse register(@RequestBody RegisterRequest newUser) throws Exception {
+        return userServices.registerUser(newUser);
+    }
 
 
 }
